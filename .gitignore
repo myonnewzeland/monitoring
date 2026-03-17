@@ -1,2 +1,137 @@
+# Environment variables
 .env
+.env.local
+.env.*.local
+
+# Credentials and secrets
+*.pem
+*.key
+*.crt
+*.csr
+credentials
+*.credentials
+
+# Backup files
 backups/
+*.tar.gz
+*.tar.gz.gpg
+*.backup
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+.AppleDouble
+.LSOverride
+
+# Build artifacts
+dist/
+build/
+target/
+
+# Test coverage
+coverage/
+*.cover
+
+# Documentation builds
+docs/_build/
+site/
+
+# Package files
+*.pkg
+node_modules/
+
+# Docker volumes data (commented to prevent accidental deletion)
+# grafana-data/
+# prometheus-data/
+# caddy-data/
+# caddy-config/
+
+# Development files
+*.dev
+*.test
+*.local
+
+# Secure credential backups
+credentials-backup-*.txt
+
+# Security scan results
+security-scan-results/
+dependency-check-report/
+
+# Performance test results
+benchmark-results/
+
+# Database files
+*.sqlite
+*.db
+
+# Cache directories
+.cache/
+.parcel-cache/
+.vite/
+
+# Editor directories
+.vscode/*
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+*.iml
+
+# VS Code (if in .devcontainer)
+.vscode/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+.directory
+
+# Project specific
+*.pid
+*.seed
+*.pid.lock
+
+# Debug files
+debug.log
+error.log
+*.log
+
+# Docker
+.dockerignore
+
+# Claude Code
+.claude/
+memory/
+
+# Git
+*.orig

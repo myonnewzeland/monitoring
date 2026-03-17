@@ -5,37 +5,113 @@ global:
   external_labels:
     environment: production
     stack: monitoring
+    region: default
+    replica: prometheus-1
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+      scheme: http
+      timeout: 10s
+      api_version: v2
 
 rule_files:
   - /etc/prometheus/alerts/*.yml
 
 scrape_configs:
   - job_name: prometheus
+    honor_labels: true
+    honor_timestamps: true
+    metrics_path: /metrics
+    scheme: http
+    follow_redirects: true
     static_configs:
       - targets:
           - prometheus:9090
         labels:
           service: prometheus
+          tier: monitoring
+          job: prometheus
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'go_.*'
+        action: drop
 
   - job_name: cadvisor
+    honor_labels: true
+    honor_timestamps: true
+    metrics_path: /metrics
+    scheme: http
+    follow_redirects: true
     static_configs:
       - targets:
           - cadvisor:8080
         labels:
           service: cadvisor
+          tier: containers
+          job: cadvisor
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'go_.*'
+        action: drop
 
   - job_name: node-exporter
+    honor_labels: true
+    honor_timestamps: true
+    metrics_path: /metrics
+    scheme: http
+    follow_redirects: true
     static_configs:
       - targets:
           - node-exporter:9100
         labels:
           service: node-exporter
+          tier: infrastructure
+          job: node-exporter
+
+  - job_name: caddy
+    honor_labels: true
+    honor_timestamps: true
+    metrics_path: /metrics
+    scheme: http
+    follow_redirects: true
+    static_configs:
+      - targets:
+          - caddy:2019
+        labels:
+          service: caddy
+          tier: proxy
+          job: caddy
 
   # Example for adding more monitored services:
   # - job_name: my-service
+  #   honor_labels: true
+  #   honor_timestamps: true
+  #   metrics_path: /metrics
+  #   scheme: http
+  #   follow_redirects: true
+  #   scrape_interval: 15s
+  #   scrape_timeout: 10s
   #   static_configs:
   #     - targets:
   #         - my-service:8080
   #       labels:
   #         service: my-service
+  #         tier: application
+  #         job: my-service
+  #   metric_relabel_configs:
+  #     - source_labels: [__name__]
+  #       regex: 'go_.*'
+  #       action: drop
+
+  # Example with file-based service discovery:
+  # - job_name: docker-services
+  #   file_sd_configs:
+  #     - files:
+  #         - /etc/prometheus/targets/*.json
+  #       refresh_interval: 30s
+  #   relabel_configs:
+  #     - source_labels: [__address__]
+  #       target_label: instance
 

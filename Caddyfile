@@ -5,17 +5,32 @@
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         X-Content-Type-Options "nosniff"
         X-Frame-Options "SAMEORIGIN"
+        X-XSS-Protection "1; mode=block"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-src 'self';"
         Referrer-Policy "strict-origin-when-cross-origin"
         Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()"
         -Server
+    }
+
+    # Rate limiting to prevent DoS attacks
+    rate_limit {
+        zone common_limits {
+            key {remote_host}
+            events 100
+            window 1m
+        }
     }
 }
 
 (common_proxy) {
     reverse_proxy {args.0} {
+        header_up Host {host}
         header_up X-Forwarded-Host {host}
         header_up X-Forwarded-Proto {scheme}
         header_up X-Forwarded-For {remote_host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-Port {server_port}
+        try_files {path} /
     }
 }
 
@@ -30,14 +45,34 @@
 cadvisor.luam.us.kg {
     import common_security
     import protected_proxy {$CADVISOR_BASIC_AUTH_USER} {$CADVISOR_BASIC_AUTH_HASH} cadvisor:8080
+    
+    @health {
+        path /health
+    }
+    respond @health 200
 }
 
 grafana.luam.us.kg {
     import common_security
     import common_proxy grafana:3000
+    
+    @health {
+        path /api/health
+    }
+    respond @health 200
 }
 
 prometheus.luam.us.kg {
     import common_security
     import protected_proxy {$PROMETHEUS_BASIC_AUTH_USER} {$PROMETHEUS_BASIC_AUTH_HASH} prometheus:9090
+    
+    @health {
+        path /-/healthy
+    }
+    respond @health 200
+    
+    @ready {
+        path /-/ready
+    }
+    respond @ready 200
 }
