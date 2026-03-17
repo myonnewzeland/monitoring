@@ -19,9 +19,17 @@
     }
 }
 
+(protected_proxy) {
+    basicauth {
+        {args.0} {args.1}
+    }
+
+    import common_proxy {args.2}
+}
+
 cadvisor.luam.us.kg {
     import common_security
-    import common_proxy cadvisor:8080
+    import protected_proxy {$CADVISOR_BASIC_AUTH_USER} {$CADVISOR_BASIC_AUTH_HASH} cadvisor:8080
 }
 
 grafana.luam.us.kg {
@@ -31,5 +39,5 @@ grafana.luam.us.kg {
 
 prometheus.luam.us.kg {
     import common_security
-    import common_proxy prometheus:9090
+    import protected_proxy {$PROMETHEUS_BASIC_AUTH_USER} {$PROMETHEUS_BASIC_AUTH_HASH} prometheus:9090
 }

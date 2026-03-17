@@ -6,6 +6,9 @@ global:
     environment: production
     stack: monitoring
 
+rule_files:
+  - /etc/prometheus/alerts/*.yml
+
 scrape_configs:
   - job_name: prometheus
     static_configs:

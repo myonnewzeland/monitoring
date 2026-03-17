@@ -4,6 +4,11 @@ services:
     image: caddy:latest
     container_name: caddy
     restart: unless-stopped
+    environment:
+      PROMETHEUS_BASIC_AUTH_USER: ${PROMETHEUS_BASIC_AUTH_USER:-prometheus-admin}
+      PROMETHEUS_BASIC_AUTH_HASH: ${PROMETHEUS_BASIC_AUTH_HASH:-$$2y$$12$$OsbB.kLJTn2ityYL1udRhOFAUWGjSWt9pmmeHn6fd8mD5H.dug12G}
+      CADVISOR_BASIC_AUTH_USER: ${CADVISOR_BASIC_AUTH_USER:-cadvisor-admin}
+      CADVISOR_BASIC_AUTH_HASH: ${CADVISOR_BASIC_AUTH_HASH:-$$2y$$12$$brFyWNQo6iIwotWK0J55eOxE3zHJOdzFfiX2jvF.XzjvTRTFPX8fO}
     ports:
       - "80:80"
       - "443:443"
@@ -26,8 +31,11 @@ services:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-change-me-now}
       GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
     volumes:
-      - grafana-data:/var/lib/grafana   
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
     expose:
       - 3000
     networks:
@@ -39,6 +47,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alerts:/etc/prometheus/alerts:ro
       - prometheus-data:/prometheus
     expose:
       - 9090
@@ -48,6 +57,25 @@ services:
       - '--web.console.libraries=/etc/prometheus/console_libraries'    
       - '--web.console.templates=/etc/prometheus/consoles'
       - '--web.enable-lifecycle'
+    networks:
+      - monitoring
+
+  backup:
+    image: alpine:3.20
+    container_name: monitoring-backup
+    restart: unless-stopped
+    command:
+      - /bin/sh
+      - -c
+      - /bin/sh /scripts/backup.sh
+    environment:
+      BACKUP_INTERVAL_SECONDS: ${BACKUP_INTERVAL_SECONDS:-86400}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
+    volumes:
+      - grafana-data:/source/grafana:ro
+      - prometheus-data:/source/prometheus:ro
+      - ./backups:/backups
+      - ./scripts:/scripts:ro
     networks:
       - monitoring
 
