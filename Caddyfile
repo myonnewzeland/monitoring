@@ -1,0 +1,35 @@
+(common_security) {
+    encode zstd gzip
+
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()"
+        -Server
+    }
+}
+
+(common_proxy) {
+    reverse_proxy {args.0} {
+        header_up X-Forwarded-Host {host}
+        header_up X-Forwarded-Proto {scheme}
+        header_up X-Forwarded-For {remote_host}
+    }
+}
+
+cadvisor.luam.us.kg {
+    import common_security
+    import common_proxy cadvisor:8080
+}
+
+grafana.luam.us.kg {
+    import common_security
+    import common_proxy grafana:3000
+}
+
+prometheus.luam.us.kg {
+    import common_security
+    import common_proxy prometheus:9090
+}
