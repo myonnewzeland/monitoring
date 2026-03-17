@@ -1,0 +1,101 @@
+groups:
+  - name: security.rules
+    rules:
+      # High rate of failed authentication attempts
+      - alert: ExcessiveFailedAuth
+        expr: rate(prometheus_http_requests_total{status="401"}[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "High rate of failed authentication attempts"
+          description: "More than 10 failed auth attempts per second detected from {{ $labels.instance }}"
+
+      # Unauthorized access attempts
+      - alert: UnauthorizedAccessAttempt
+        expr: rate(prometheus_http_requests_total{status="403"}[5m]) > 5
+        for: 5m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "Unauthorized access attempts detected"
+          description: "More than 5 unauthorized requests per second from {{ $labelsinstance }}"
+
+      # Container restart anomalies (potential security issue)
+      - alert: ContainerRestartAnomaly
+        expr: rate(container_tasks_state{state="running"}[10m]) < 0
+        for: 2m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "Container restart anomaly detected"
+          description: "Container {{ $labels.name }} has restarted unexpectedly"
+
+      # Disk space exhaustion (potential DoS)
+      - alert: CriticalDiskSpace
+        expr: (node_filesystem_avail_bytes{fstype!="",mountpoint="/"} / node_filesystem_size_bytes{fstype!="",mountpoint="/"}) < 0.05
+        for: 5m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "Critical disk space on root filesystem"
+          description: "Available disk space on / is below 5%. Possible log flooding attack or DoS."
+
+      # Unusual network activity (if monitoring network metrics)
+      - alert: UnusualNetworkActivity
+        expr: rate(node_network_receive_bytes_total[5m]) > 1000000000
+        for: 10m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "Unusual network activity detected"
+          description: "Network receive rate > 1GB/s on {{ $labels.device }}. Possible data exfiltration."
+
+      # Service availability (potential DoS)
+      - alert: ServiceUnavailable
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "Service unavailable - possible DoS attack"
+          description: "Service {{ $labels.job }} on {{ $labels.instance }} is down."
+
+      # Configuration changes detection
+      - alert: PrometheusConfigReloadFailed
+        expr: prometheus_config_last_reload_successful == 0
+        for: 5m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "Prometheus configuration reload failed"
+          description: "Prometheus configuration reload has failed. Possible unauthorized configuration change."
+
+      # Memory exhaustion (potential DoS)
+      - alert: MemoryExhaustion
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.95
+        for: 5m
+        labels:
+          severity: critical
+          category: security
+        annotations:
+          summary: "System memory exhaustion"
+          description: "Memory usage above 95%. Possible memory leak or DoS attack."
+
+      # Process count anomaly (potential fork bomb)
+      - alert: ProcessCountAnomaly
+        expr: node_procs_running > 1000
+        for: 10m
+        labels:
+          severity: warning
+          category: security
+        annotations:
+          summary: "Unusual process count detected"
+          description: "More than 1000 running processes. Possible fork bomb or malware."
